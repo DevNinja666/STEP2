@@ -1,0 +1,301 @@
+#include <iostream>
+
+template<typename T>
+class Queue {
+private:
+    T* data;
+    size_t capacity;
+    size_t head;
+    size_t tail;
+    size_t count;
+
+    void resize() {
+        size_t newCap = capacity * 2;
+        T* newData = new T[newCap];
+        for (size_t i = 0; i < count; i++)
+            newData[i] = data[(head + i) % capacity];
+        delete[] data;
+        data = newData;
+        capacity = newCap;
+        head = 0;
+        tail = count;
+    }
+
+public:
+    Queue(size_t initialCap = 10) :
+        capacity(initialCap), head(0), tail(0), count(0)
+    {
+        data = new T[capacity];
+    }
+
+    Queue(const Queue& other) :
+        capacity(other.capacity), head(other.head),
+        tail(other.tail), count(other.count)
+    {
+        data = new T[capacity];
+        for (size_t i = 0; i < capacity; i++)
+            data[i] = other.data[i];
+    }
+
+    Queue& operator=(const Queue& other) {
+        if (this == &other) return *this;
+        delete[] data;
+        capacity = other.capacity;
+        head = other.head;
+        tail = other.tail;
+        count = other.count;
+        data = new T[capacity];
+        for (size_t i = 0; i < capacity; i++)
+            data[i] = other.data[i];
+        return *this;
+    }
+
+    Queue(Queue&& other) noexcept :
+        data(other.data), capacity(other.capacity),
+        head(other.head), tail(other.tail), count(other.count)
+    {
+        other.data = nullptr;
+        other.count = 0;
+    }
+
+    Queue& operator=(Queue&& other) noexcept {
+        if (this == &other) return *this;
+        delete[] data;
+        data = other.data;
+        capacity = other.capacity;
+        head = other.head;
+        tail = other.tail;
+        count = other.count;
+        other.data = nullptr;
+        other.count = 0;
+        return *this;
+    }
+
+    ~Queue() {
+        delete[] data;
+    }
+
+    void Enqueue(const T& element) {
+        if (count == capacity)
+            resize();
+        data[tail] = element;
+        tail = (tail + 1) % capacity;
+        count++;
+    }
+
+    void Dequeue() {
+        if (Empty()) throw std::runtime_error("Queue is empty!");
+        head = (head + 1) % capacity;
+        count--;
+    }
+
+    T& Front() {
+        if (Empty()) throw std::runtime_error("Queue is empty!");
+        return data[head];
+    }
+
+    T& Back() {
+        if (Empty()) throw std::runtime_error("Queue is empty!");
+        return data[(tail - 1 + capacity) % capacity];
+    }
+
+    size_t Count() const {
+        return count;
+    }
+
+    bool Empty() const {
+        return count == 0;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Queue<T>& q) {
+        os << "[ ";
+        for (size_t i = 0; i < q.count; i++)
+            os << q.data[(q.head + i) % q.capacity] << " ";
+        os << "]";
+        return os;
+    }
+};
+
+int main() {
+    Queue<int> q;
+    q.Enqueue(10);
+    q.Enqueue(20);
+    q.Enqueue(30);
+
+    std::cout << q << "\n";
+
+
+
+
+
+    ///task2///
+
+
+
+    #include <iostream>
+
+template<typename T>
+struct Less {
+    bool operator()(const T& a, const T& b) const {
+        return a < b;
+    }
+};
+
+template<typename T>
+struct Greater {
+    bool operator()(const T& a, const T& b) const {
+        return a > b;
+    }
+};
+
+template<typename T, typename Comparator = Less<T>>
+class PriorityQueue {
+private:
+    T* data;
+    size_t capacity;
+    size_t head;
+    size_t tail;
+    size_t count;
+    Comparator comp;
+
+    void resize() {
+        size_t newCap = capacity * 2;
+        T* newData = new T[newCap];
+        for (size_t i = 0; i < count; i++)
+            newData[i] = data[(head + i) % capacity];
+        delete[] data;
+        data = newData;
+        capacity = newCap;
+        head = 0;
+        tail = count;
+    }
+
+    void reorder() {
+        for (size_t i = 0; i < count; i++) {
+            for (size_t j = i + 1; j < count; j++) {
+                size_t idx1 = (head + i) % capacity;
+                size_t idx2 = (head + j) % capacity;
+                if (!comp(data[idx1], data[idx2])) {
+                    T tmp = data[idx1];
+                    data[idx1] = data[idx2];
+                    data[idx2] = tmp;
+                }
+            }
+        }
+    }
+
+public:
+    PriorityQueue(size_t initialCap = 10) :
+        capacity(initialCap), head(0), tail(0), count(0)
+    {
+        data = new T[capacity];
+    }
+
+    PriorityQueue(const PriorityQueue& other) :
+        capacity(other.capacity), head(other.head),
+        tail(other.tail), count(other.count), comp(other.comp)
+    {
+        data = new T[capacity];
+        for (size_t i = 0; i < capacity; i++)
+            data[i] = other.data[i];
+    }
+
+    PriorityQueue& operator=(const PriorityQueue& other) {
+        if (this == &other) return *this;
+        delete[] data;
+        capacity = other.capacity;
+        head = other.head;
+        tail = other.tail;
+        count = other.count;
+        comp = other.comp;
+        data = new T[capacity];
+        for (size_t i = 0; i < capacity; i++)
+            data[i] = other.data[i];
+        return *this;
+    }
+
+    PriorityQueue(PriorityQueue&& other) noexcept :
+        data(other.data), capacity(other.capacity),
+        head(other.head), tail(other.tail),
+        count(other.count), comp(other.comp)
+    {
+        other.data = nullptr;
+        other.count = 0;
+    }
+
+    PriorityQueue& operator=(PriorityQueue&& other) noexcept {
+        if (this == &other) return *this;
+        delete[] data;
+        data = other.data;
+        capacity = other.capacity;
+        head = other.head;
+        tail = other.tail;
+        count = other.count;
+        comp = other.comp;
+        other.data = nullptr;
+        other.count = 0;
+        return *this;
+    }
+
+    ~PriorityQueue() {
+        delete[] data;
+    }
+
+    void Enqueue(const T& element) {
+        if (count == capacity)
+            resize();
+        data[tail] = element;
+        tail = (tail + 1) % capacity;
+        count++;
+        reorder();
+    }
+
+    void Dequeue() {
+        if (Empty()) throw std::runtime_error("PriorityQueue is empty!");
+        head = (head + 1) % capacity;
+        count--;
+    }
+
+    T& Front() {
+        if (Empty()) throw std::runtime_error("PriorityQueue is empty!");
+        return data[head];
+    }
+
+    T& Back() {
+        if (Empty()) throw std::runtime_error("PriorityQueue is empty!");
+        return data[(tail - 1 + capacity) % capacity];
+    }
+
+    size_t Count() const {
+        return count;
+    }
+
+    bool Empty() const {
+        return count == 0;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const PriorityQueue<T, Comparator>& q) {
+        os << "[ ";
+        for (size_t i = 0; i < q.count; i++)
+            os << q.data[(q.head + i) % q.capacity] << " ";
+        os << "]";
+        return os;
+    }
+};
+
+int main() {
+    PriorityQueue<int, Less<int>> pq1;
+    pq1.Enqueue(5);
+    pq1.Enqueue(1);
+    pq1.Enqueue(9);
+    pq1.Enqueue(3);
+    std::cout << "Min-queue: " << pq1 << "\n";
+
+    PriorityQueue<int, Greater<int>> pq2;
+    pq2.Enqueue(5);
+    pq2.Enqueue(1);
+    pq2.Enqueue(9);
+    pq2.Enqueue(3);
+    std::cout << "Max-queue: " << pq2 << "\n";
+}
+
