@@ -176,7 +176,7 @@ class RemoteCursor
 
                 udp.Send(data, data.Length, ep);
 
-                Thread.Sleep(10); // ~100 updates per second
+                Thread.Sleep(10); 
             }
         }
         catch
